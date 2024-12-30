@@ -33,16 +33,18 @@ func NewPermissionMiddleware(config MiddlewareConfig) gin.HandlerFunc {
 				})
 				return
 			}
+
 			permissions := strings.Split(userPermissions, ",")
-			if !contains(permissions, requiredPermission) {
+			if !hasPermission(permissions, requiredPermission) {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-					"error": "No tienes permiso para acceder a esta ruta/método",
+					"error": "no tienes permiso para acceder a este recurso y método",
 				})
 				return
 			}
 			c.Next()
 			return
 		}
+
 		if config.AllowUndefined {
 			c.Next()
 			return
@@ -54,10 +56,23 @@ func NewPermissionMiddleware(config MiddlewareConfig) gin.HandlerFunc {
 	}
 }
 
-func contains(s []string, item string) bool {
-	for _, v := range s {
-		if v == item {
+func hasPermission(userPermissions []string, requiredPermission string) bool {
+	requiredParts := strings.Split(requiredPermission, ":")
+	for _, permission := range userPermissions {
+		if permission == "*:*" {
 			return true
+		}
+		permissionParts := strings.Split(permission, ":")
+		if len(permissionParts) == 2 {
+			if permissionParts[0] == requiredParts[0] && permissionParts[1] == "*" {
+				return true
+			}
+			if permissionParts[0] == "*" && permissionParts[1] == "*" {
+				return true //refactor this redundancy
+			}
+			if permissionParts[0] == requiredParts[0] && permissionParts[1] == requiredParts[1] {
+				return true
+			}
 		}
 	}
 	return false
