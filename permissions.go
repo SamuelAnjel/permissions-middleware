@@ -17,7 +17,7 @@ func NewPermissionMiddleware(config MiddlewareConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.FullPath()
 		method := c.Request.Method
-
+		fmt.Println(c.Request.Header)
 		if permissionsForRoute, exists := config.RoutePermissions[path]; exists {
 			requiredPermission, methodExists := permissionsForRoute[method]
 			if !methodExists {
